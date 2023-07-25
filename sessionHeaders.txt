@@ -1,0 +1,19 @@
+unique identifier
+mouseName
+date
+session ID
+unique mouse ID
+experiment type
+imaging
+face camera
+vrEnvironments
+number of imaging planes
+separation of imaging planes
+pockels cell percentage
+rotation of objective
+rotation of head plate holder
+suite2p processed
+suite2p quality control
+vrExperiment registration processed
+red cell quality control
+session quality control
