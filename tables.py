@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, Date, Float, Text, TIMESTAMP, create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
@@ -17,7 +18,7 @@ class mice(Base):
     virusDescription = Column(Text, nullable=True)
     implantDate = Column(Date, nullable=True)
     implantDescription = Column(Text, nullable=True)
-    logTime = Column(TIMESTAMP, server_default='CURRENT_TIMESTAMP')
+    logTime = Column(TIMESTAMP, server_default=func.now())
     
 
 class sessions(Base):
@@ -57,11 +58,7 @@ class sessions(Base):
     sessionScratchExplanation = Column(Text, nullable=True) # if session QC set to False, a textual explanation as to why it should be scratched
     
     # generic feature
-    logTime = Column(TIMESTAMP, server_default='CURRENT_TIMESTAMP')
-
-
-def returnBase():
-    return Base
+    logTime = Column(TIMESTAMP, server_default=func.now())
 
 
 
