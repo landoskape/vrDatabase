@@ -10,7 +10,7 @@ def openSession(database, host='localhost', username='root', password=None, port
     urlObject = URL.create("mysql+mysqlconnector", username=username, password=password, host=host, database=database)
     return create_engine(urlObject)
 
-def getTableColumns(table):
+def getTableInfo(table):
     # Extract information about the table metadata
     tableMetadata = table.__table__
     columnNames = tableMetadata.columns.keys()
