@@ -18,7 +18,6 @@ for i in range(1, n):
 listInput = [sys.argv[i] for i in range(1,n)]
 print("\n\nList of Inputs: ", listInput)
 
-
 darkModeStylesheet = """
     QWidget {
         background-color: #1F1F1F;
