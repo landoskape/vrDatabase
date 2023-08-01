@@ -1,8 +1,8 @@
 import databaseManagement as dm
 
-def createTables(database):
+def createTables(database=None):
     try:
-        engine = dm.openSession(database)
+        engine = dm.createEngine(database)
         from tables import Base
         Base.metadata.create_all(engine)
         return True

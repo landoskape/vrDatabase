@@ -22,12 +22,13 @@ try:
 except Exception as ex:
     raise ValueError(f"The table you requested {tableName} is probably not a valid table object.")
 
-def addElement(engine, newRow):
-    print('add element, in addTableEntry, needs to be coded (along with some supporting functions)')
-    # with Session(engine) as session:
-    #     session.add(newRow)
-    #     session.commit()
-    return None
+def addElement(newElement):
+    engine = dm.createEngine()
+    with Session(engine) as session:
+        session.add(newElement)
+        session.commit()
+        return True
+    return False
 
 # prepare GUI
 darkModeStylesheet = """
@@ -83,23 +84,33 @@ darkModeStylesheet = """
 darkModeErrorStyle = "background-color: #CC6666;"
 
 
-class MyGUI(QWidget):
-    def __init__(self, columnNames):
+class newEntryGUI(QWidget):
+    def __init__(self, columnNames, columnFeatures):
         super().__init__()
-        self.init_ui(columnNames)
+        self.init_ui(columnNames, columnFeatures)
 
-    def init_ui(self, columnNames):
+    def init_ui(self, columnNames, columnFeatures):
         assert isinstance(columnNames, list), "columnNames must be a list"
+        assert isinstance(columnFeatures, list), "columnFeatures must be a list"
         assert all([isinstance(col, str) for col in columnNames]), "columnNames must be strings"
         
+        # First, check and select which columns require the user to provide information
+        requiresInfo = dm.requiresUserInfo(columnFeatures)
+        columnsRequired = [cname for idx,cname in enumerate(columnNames) if requiresInfo[idx]]
+        featuresRequired = [cfeat for idx,cfeat in enumerate(columnFeatures) if requiresInfo[idx]]
+        
         # For each column name, create a label and an edit field
-        self.columnNames = columnNames
+        self.columnNames = columnsRequired
+        self.columnFeatures = featuresRequired
         self.numColumns = len(self.columnNames)
         self.columnLabels = []
         self.columnEntries = []
-        for colName in self.columnNames:
+        for idx, (colName,colFeat) in enumerate(zip(self.columnNames, self.columnFeatures)):
             self.columnLabels.append(QLabel(f"{colName}:"))
+            if 
             self.columnEntries.append(QLineEdit())
+            if hasattr(colFeat['Type'], 'length'):
+                self.columnEntries[idx].setMaxLength(colFeat['Type'].length)
             
         # Create a display area to print the full entry
         self.outputLabel = QLabel("New Entry:")
@@ -107,8 +118,10 @@ class MyGUI(QWidget):
         self.outputEntry.setReadOnly(True)
         
         # Create a button for submitting the new entry to a table
+        self.showEntry = QPushButton("Show")
+        self.showEntry.clicked.connect(self.printValues)
         self.submitEntry = QPushButton("Submit")
-        self.submitEntry.clicked.connect(self.printValues)
+        self.submitEntry.clicked.connect(self.addNewEntry)
         
         # Set validation functions for each field
         for idx,inputs in enumerate(self.columnEntries):
@@ -118,7 +131,7 @@ class MyGUI(QWidget):
         layout = QFormLayout()
         for label,entry in zip(self.columnLabels, self.columnEntries):
             layout.addRow(label, entry)
-        layout.addRow(self.submitEntry)
+        layout.addRow(self.showEntry, self.submitEntry)
         layout.addRow(self.outputLabel, self.outputEntry)
 
         # Set the main layout for the window
@@ -132,12 +145,7 @@ class MyGUI(QWidget):
         self.setStyleSheet(darkModeStylesheet)
 
     def validateInput(self, event=None, columnIndex=None):
-        if 0 < len(self.columnEntries[columnIndex].text()) <= 20:
-            self.columnEntries[columnIndex].setStyleSheet("")
-            return True
-        else: 
-            self.columnEntries[columnIndex].setStyleSheet(darkModeErrorStyle)
-            return False
+        return dm.validateInput(self.columnEntries[columnIndex].text(), self.columnFeatures[columnIndex])
         
     def checkValidity(self):
         validEntries = [self.validateInput(columnIndex=idx) for idx in range(self.numColumns)]
@@ -149,14 +157,27 @@ class MyGUI(QWidget):
             stringToPrint = ""
             for colName, colEntry in zip(self.columnNames, self.columnEntries):
                 stringToPrint += f"{colName}: {colEntry.text()}\n"
-            self.outputEntry.setPlainText(stringToPrint)
+            
+            self.outputEntry.setPlainText("Input data is valid, ready to submit!\n"+stringToPrint)
         else:
             self.outputEntry.setPlainText("Some fields do not have valid input data!")
-        
+    
+    def addNewEntry(self):
+        validData = self.checkValidity()
+        if validData:
+            newEntry = table()
+            for colName, colEntry in zip(self.columnNames, self.columnEntries):
+                setattr(newEntry, colName, colEntry.text())
+                print(f"{colName} = {getattr(newEntry, colName)}")
+            addElement(newEntry)
+            self.outputEntry.setPlainText("Submission successful")
+        else:
+            self.outputEntry.setPlainText("Some fields do not have valid input data, submission failed!")
+            
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MyGUI(columnNames)
+    window = newEntryGUI(columnNames, columnFeatures)
     window.show()
     sys.exit(app.exec_())
 
